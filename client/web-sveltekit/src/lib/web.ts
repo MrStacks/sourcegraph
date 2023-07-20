@@ -17,11 +17,6 @@ export { replaceRevisionInURL } from '@sourcegraph/web/src/util/url'
 
 export { syntaxHighlight } from '@sourcegraph/web/src/repo/blob/codemirror/highlight'
 export { defaultSearchModeFromSettings } from '@sourcegraph/web/src/util/settings'
-export { GlobalNotebooksArea, type GlobalNotebooksAreaProps } from '@sourcegraph/web/src/notebooks/GlobalNotebooksArea'
-export {
-    CodeInsightsRouter,
-    type CodeInsightsRouterProps,
-} from '@sourcegraph/web/src/enterprise/insights/CodeInsightsRouter'
 
 export type RepoResolvedRevision = ResolvedRevision & Repo
 export { ResolvedRevision, Repo }

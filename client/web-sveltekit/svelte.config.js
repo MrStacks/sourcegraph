@@ -19,11 +19,6 @@ const config = {
       $root: '../../',
       // Makes it easier to refer to files outside packages (such as images)
       $testdata: 'src/testdata.ts',
-      // Somehow these aliases are necessary to make CSS imports work. Otherwise
-      // Vite/postcss/whatever tries to the import these relative to the
-      // importing file.
-      wildcard: '../wildcard/',
-      'open-color': '../../node_modules/open-color',
       // Map node-module to browser version
       path: '../../node_modules/path-browserify',
       // These are directories and cannot be imported from directly in

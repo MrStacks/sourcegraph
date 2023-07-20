@@ -4,11 +4,12 @@
 
     export let href: string
     export let svgIconPath: string = ''
+    export let external = false
 
     $: current = $page.url.pathname === href ? ('page' as const) : null
 </script>
 
-<li aria-current={current}>
+<li aria-current={current} data-sveltekit-reload={external || 'off'}>
     <a {href}>
         {#if $$slots.icon}
             <slot name="icon" />

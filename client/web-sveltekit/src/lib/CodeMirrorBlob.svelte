@@ -1,5 +1,5 @@
 <script lang="ts">
-    import '@sourcegraph/wildcard/src/global-styles/highlight.scss'
+    import '$lib/highlight.scss'
 
     import { Compartment, EditorState, StateEffect, type Extension } from '@codemirror/state'
     import { EditorView, lineNumbers } from '@codemirror/view'
