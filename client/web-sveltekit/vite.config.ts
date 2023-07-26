@@ -33,16 +33,21 @@ export default defineConfig(({ mode }) => {
         },
 
         server: {
+            // Allow setting the port via env variables to make it easier to integrate with
+            // our existing caddy setup (which proxies requests to a specific port).
+            port: process.env.SK_PORT || undefined,
+            strictPort: !!process.env.SV_PORT,
             proxy: {
                 // Proxy requests to specific endpoints to a real Sourcegraph
                 // instance.
-                '^(/sign-in|/.assets|/-|/.api|/search/stream|/users)': {
+                '^(/sign-in|/.assets|/-|/.api|/search/stream|/users|/notebooks|/insights)': {
                     target: process.env.SOURCEGRAPH_API_URL || 'https://sourcegraph.com',
                     changeOrigin: true,
                     secure: false,
                 },
             },
         },
+
         optimizeDeps: {
             exclude: [
                 // Without addings this Vite throws an error
