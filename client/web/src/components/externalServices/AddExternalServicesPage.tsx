@@ -92,8 +92,7 @@ export const AddExternalServicesPage: FC<AddExternalServicesPageProps> = ({
 
     const licenseInfo = window.context.licenseInfo
     let allowedCodeHosts: AddExternalServiceOptions[] | null = null
-    // if (licenseInfo && licenseInfo.currentPlan === 'business-0') {
-    if (!(licenseInfo && licenseInfo.currentPlan === 'business-0')) {
+    if (licenseInfo && licenseInfo.currentPlan === 'business-0') {
         allowedCodeHosts = [
             codeHostExternalServices.github,
             codeHostExternalServices.gitlabcom,
@@ -158,7 +157,6 @@ export const AddExternalServicesPage: FC<AddExternalServicesPageProps> = ({
                     <ExternalServiceGroup
                         name="Dependencies"
                         services={transformExternalServices(nonCodeHostExternalServices)}
-                        description=""
                         renderServiceIcon={true}
                     />
                 )}
@@ -256,14 +254,19 @@ const computeExternalServicesGroup = (
                 groupedServices.GitHub.services.push({ ...service, serviceID, enabled: !isDisabled, ...otherProps })
                 break
             case ExternalServiceKind.GITLAB:
-                groupedServices.GitLab.services.push({ ...service, serviceID })
+                groupedServices.GitLab.services.push({ ...service, serviceID, enabled: !isDisabled, ...otherProps })
                 break
             case ExternalServiceKind.BITBUCKETCLOUD:
             case ExternalServiceKind.BITBUCKETSERVER:
-                groupedServices.Bitbucket.services.push({ ...service, serviceID })
+                groupedServices.Bitbucket.services.push({ ...service, serviceID, enabled: !isDisabled, ...otherProps })
                 break
             default:
-                groupedServices['Other code hosts'].services.push({ ...service, serviceID })
+                groupedServices['Other code hosts'].services.push({
+                    ...service,
+                    serviceID,
+                    enabled: !isDisabled,
+                    ...otherProps,
+                })
         }
     }
 
