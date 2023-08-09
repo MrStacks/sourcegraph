@@ -1,102 +1,45 @@
-{ pkgs
-, lib
-, autoreconfHook
-, perl
-, pkg-config
-, coreutils
-, pkgsStatic
-, fetchFromGitHub
-, buildPackages
-}:
-let
-  inherit (import ./util.nix { inherit lib; }) mkStatic unNixifyDylibs;
-  pcre2 = mkStatic pkgsStatic.pcre2;
-  libyaml = mkStatic pkgsStatic.libyaml;
-  jansson = pkgsStatic.jansson.overrideAttrs (oldAttrs: {
-    cmakeFlags = [ "-DJANSSON_BUILD_SHARED_LIBS=OFF" ];
-  });
-  stdenv = pkgsStatic.stdenv;
-in
-# yoinked from github.com/nixos/nixpkgs
-unNixifyDylibs { inherit pkgs; } (stdenv.mkDerivation rec {
-  pname = "universal-ctags";
-  version = "5.9.20220403.0";
+{
+  description = "The Sourcegraph developer environment & packages Nix Flake";
 
-  src = fetchFromGitHub {
-    owner = "universal-ctags";
-    repo = "ctags";
-    rev = "p${version}";
-    sha256 = "sha256-pd89KERQj6K11Nue3YFNO+NLOJGqcMnHkeqtWvMFk38=";
+  inputs = {
+    nixpkgs.url = "nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
   };
 
-  depsBuildBuild = [
-    buildPackages.stdenv.cc
-  ];
+  outputs = { self, nixpkgs, flake-utils }:
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+          pkgs' = import nixpkgs { inherit system; overlays = builtins.attrValues self.overlays; };
+        in
+        {
+          # We set legacyPackages to our custom static binaries so command
+          # like "nix build .#p4-fusion" work.
+          legacyPackages = pkgs';
 
-  nativeBuildInputs = [
-    autoreconfHook
-    perl
-    pkg-config
-  ];
+          packages = {
+            ctags = pkgs.callPackage ./dev/nix/ctags.nix { };
+            comby = pkgs.callPackage ./dev/nix/comby.nix { };
+            nodejs-16_x = pkgs.callPackage ./dev/nix/nodejs.nix { };
+          }
+          # so we don't get `packages.aarch64-linux.p4-fusion` in nix `flake show` output
+          // pkgs.lib.optionalAttrs (pkgs.targetPlatform.system != "aarch64-linux") {
+            p4-fusion = pkgs.callPackage ./dev/nix/p4-fusion.nix { };
+          };
 
-  buildInputs = [
-    libyaml
-    pcre2
-    jansson
-    pkgsStatic.libxml2
-  ]
-  ++ lib.optional stdenv.isDarwin pkgsStatic.libiconv;
+          # We use pkgs (not pkgs') intentionally to avoid doing extra work of
+          # building static comby/universal-ctags in our development
+          # environments.
+          devShells.default = pkgs.callPackage ./shell.nix { };
 
-  configureFlags = [ "--enable-tmpdir=/tmp" ];
-
-  dontAddExtraLibs = true;
-
-  patches = [
-    "${pkgs.path}/pkgs/development/tools/misc/universal-ctags/000-nixos-specific.patch"
-  ];
-
-  postPatch = ''
-    substituteInPlace Tmain/utils.sh \
-      --replace /bin/echo ${coreutils}/bin/echo
-
-    patchShebangs misc/*
-  '';
-
-  postFixup = ''
-    ln -s $out/bin/ctags $out/bin/universal-ctags
-  '';
-
-  doCheck = true;
-
-  checkTarget = [
-    "tlib"
-    "tmain"
-    "units"
-  ];
-  # disable check-genfile, this attempts to run some git commands
-  # which arent supported as we dont have/include .git
-  checkFlags = [
-    "-o"
-    "check-genfile"
-  ];
-
-  # must be enabled on a per-package basis
-  enableParallelBuilding = true;
-  enableParallelChecking = true;
-
-  meta = with lib; {
-    homepage = "https://docs.ctags.io/en/latest/";
-    description = "A maintained ctags implementation";
-    longDescription = ''
-      Universal Ctags (abbreviated as u-ctags) is a maintained implementation of
-      ctags. ctags generates an index (or tag) file of language objects found in
-      source files for programming languages. This index makes it easy for text
-      editors and other tools to locate the indexed items.
-    '';
-    license = licenses.gpl2Plus;
-    maintainers = [ maintainers.AndersonTorres ];
-    platforms = platforms.all;
-    mainProgram = "ctags";
-    priority = 1; # over the emacs implementation
-  };
-})
+          formatter = pkgs.nixpkgs-fmt;
+        }) // {
+      overlays = {
+        ctags = final: prev: { universal-ctags = self.packages.${prev.system}.ctags; };
+        comby = final: prev: { comby = self.packages.${prev.system}.comby; };
+        nodejs-16_x = final: prev: { nodejs-16_x = self.packages.${prev.system}.nodejs-16_x; };
+        p4-fusion = final: prev: { p4-fusion = self.packages.${prev.system}.p4-fusion; };
+      };
+    };
+}
