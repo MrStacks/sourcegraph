@@ -166,11 +166,16 @@ class ResetPasswordCodeForm extends React.PureComponent<ResetPasswordCodeFormPro
         submitOrError: undefined,
     }
 
+    // send email in to the signin page
     public render(): JSX.Element | null {
         if (this.state.submitOrError === null) {
             return (
                 <Alert variant="success">
-                    Your password was reset. <Link to="/sign-in">Sign in with your new password</Link> to continue.
+                    Your password was reset.{' '}
+                    <Link to="/sign-in" user-id={this.props.email}>
+                        Sign in with your new password
+                    </Link>{' '}
+                    to continue.
                 </Alert>
             )
         }

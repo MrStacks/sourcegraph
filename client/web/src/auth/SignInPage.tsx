@@ -23,6 +23,7 @@ import signInSignUpCommonStyles from './SignInSignUpCommon.module.scss'
 
 export interface SignInPageProps {
     authenticatedUser: AuthenticatedUser | null
+    userID: string | null
     context: Pick<
         SourcegraphContext,
         | 'allowSignup'
